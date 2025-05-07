@@ -11,7 +11,7 @@ lightning-utilities==0.11.6
 MarkupSafe==2.1.3
 mkl-fft==1.3.8
 mkl-random==1.2.4
-mkl-service==2.4.0
+mkl-service==2.4.1
 mpmath==1.3.0
 networkx==3.3
 numpy==1.26.4
