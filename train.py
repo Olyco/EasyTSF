@@ -74,6 +74,7 @@ def train_func(hyper_conf, conf):
         gradient_clip_algorithm=conf["gradient_clip_algorithm"] if "gradient_clip_algorithm" in conf else "norm",
         gradient_clip_val=conf["gradient_clip_val"],
         default_root_dir=conf["save_root"],
+        deterministic=True,
     )
 
     data_module = DataInterface(**conf)
