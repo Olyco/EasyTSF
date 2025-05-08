@@ -99,7 +99,7 @@ class DataInterface(pl.LightningDataModule):
             ),
             batch_size=self.batch_size,
             num_workers=self.num_workers,
-            shuffle=True,
+            shuffle=False,
             drop_last=True
         )
 
