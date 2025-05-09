@@ -8,6 +8,8 @@ import torch
 import torch.nn as nn
 import torch.optim.lr_scheduler as lrs
 
+from kan import KAN
+
 
 class LTSFRunner(L.LightningModule):
     def __init__(self, **kargs):
@@ -97,8 +99,11 @@ class LTSFRunner(L.LightningModule):
 
     def load_model(self):
         model_name = self.hparams.model_name
-        Model = getattr(importlib.import_module('.' + model_name, package='easytsf.model'), model_name)
-        self.model = self.instancialize(Model)
+        if model_name == "KAN":
+          self.model = self.instancialize(KAN)
+        else:
+          Model = getattr(importlib.import_module('.' + model_name, package='easytsf.model'), model_name)
+          self.model = self.instancialize(Model)
 
     def instancialize(self, Model):
         """ Instancialize a model using the corresponding parameters
