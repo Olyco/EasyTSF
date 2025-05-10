@@ -2,6 +2,8 @@ import argparse
 import importlib
 import importlib.util
 import os
+from datetime import datetime
+import pytz
 
 import lightning.pytorch as L
 from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint, EarlyStopping
@@ -29,6 +31,7 @@ def load_config(exp_conf_path):
     # conf 融合，参数优先级: exp_conf > task_conf = data_conf
     fused_conf = {**task_conf, **data_conf}
     fused_conf.update(exp_conf)
+    fused_conf["save_root"] = os.path.join(fused_conf["save_root"], '{}'.format(datetime.now(pytz.timezone('Europe/Moscow')).strftime("%d%m%y_%H%M")))
 
     return fused_conf
 
@@ -36,6 +39,7 @@ def load_config(exp_conf_path):
 def train_func(hyper_conf, conf):
     if hyper_conf is not None:
         for k, v in hyper_conf.items():
+          if k != "save_root":
             conf[k] = v
     conf['conf_hash'] = cal_conf_hash(conf, hash_len=10)
 
