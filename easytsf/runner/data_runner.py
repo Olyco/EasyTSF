@@ -8,13 +8,15 @@ from torch.utils.data import Dataset
 
 
 class GeneralTSFDataset(Dataset):
-    def __init__(self, hist_len, pred_len, variable, time_feature):
+    def __init__(self, hist_len, pred_len, variable, time_feature, model_name):
         self.hist_len = hist_len
         self.pred_len = pred_len
         self.variable = variable
         self.time_feature = time_feature
+        self.model_name = model_name
 
     def __getitem__(self, index):
+        print("MODEL NAME", self.model_name)
         hist_start = index
         hist_end = index + self.hist_len
         pred_end = hist_end + self.pred_len
@@ -95,7 +97,8 @@ class DataInterface(pl.LightningDataModule):
                 self.hist_len,
                 self.pred_len,
                 self.variable[:self.train_len].copy(),
-                self.time_feature[:self.train_len].copy()
+                self.time_feature[:self.train_len].copy(),
+                self.config["model_name"],
             ),
             batch_size=self.batch_size,
             num_workers=self.num_workers,
@@ -110,6 +113,7 @@ class DataInterface(pl.LightningDataModule):
                 self.pred_len,
                 self.variable[self.train_len - self.hist_len:self.train_len + self.val_len].copy(),
                 self.time_feature[self.train_len - self.hist_len:self.train_len + self.val_len].copy(),
+                self.config["model_name"],
             ),
             batch_size=self.batch_size,
             num_workers=self.num_workers,
@@ -124,6 +128,7 @@ class DataInterface(pl.LightningDataModule):
                 self.pred_len,
                 self.variable[self.train_len + self.val_len - self.hist_len:].copy(),
                 self.time_feature[self.train_len + self.val_len - self.hist_len:].copy(),
+                self.config["model_name"],
             ),
             batch_size=1,
             num_workers=self.num_workers,
