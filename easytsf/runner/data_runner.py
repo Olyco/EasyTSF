@@ -16,7 +16,6 @@ class GeneralTSFDataset(Dataset):
         self.model_name = model_name
 
     def __getitem__(self, index):
-        print("MODEL NAME", self.model_name)
         hist_start = index
         hist_end = index + self.hist_len
         pred_end = hist_end + self.pred_len
@@ -26,6 +25,12 @@ class GeneralTSFDataset(Dataset):
 
         var_y = self.variable[hist_end:pred_end, ...]
         tf_y = self.time_feature[hist_end:pred_end, ...]
+
+        if self.model_name == "KAN":
+          var_x = var_x.reshape(-1)
+          tf_x = tf_x.reshape(-1)
+          var_y = var_y.reshape(-1)
+          tf_y = tf_y.reshape(-1)
 
         return var_x, tf_x, var_y, tf_y
 
