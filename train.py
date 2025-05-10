@@ -32,6 +32,8 @@ def load_config(exp_conf_path):
     fused_conf = {**task_conf, **data_conf}
     fused_conf.update(exp_conf)
     fused_conf["save_root"] = os.path.join(fused_conf["save_root"], '{}'.format(datetime.now(pytz.timezone('Europe/Moscow')).strftime("%d%m%y_%H%M")))
+    if fused_conf["model_name"] == "KAN":
+      fused_conf["ckpt_path"] = os.path.join(fused_conf["save_root"], "model")
 
     return fused_conf
 
