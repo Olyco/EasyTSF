@@ -24,8 +24,12 @@ class LTSFRunner(L.LightningModule):
 
     def forward(self, batch, batch_idx):
         var_x, marker_x, var_y, marker_y = [_.float() for _ in batch]
-        label = var_y[:, -self.hparams.pred_len:, :]
-        prediction = self.model(var_x, marker_x)[:, -self.hparams.pred_len:, :]
+        if self.hparams.model_name == "KAN":
+          label = var_y[:, -self.hparams.pred_len:]
+          prediction = self.model(var_x, marker_x)[:, -self.hparams.pred_len:]
+        else:
+          label = var_y[:, -self.hparams.pred_len:, :]
+          prediction = self.model(var_x, marker_x)[:, -self.hparams.pred_len:, :]
         return prediction, label
 
     def training_step(self, batch, batch_idx):
