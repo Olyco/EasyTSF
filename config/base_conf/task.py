@@ -17,6 +17,7 @@ task_conf = dict(
     es_patience=10,
 
     norm_time_feature=False,
+    include_time_feature = False,
     time_feature_cls=["tod", "dow"],
 
     num_workers=2,
