@@ -60,41 +60,44 @@ class DataInterface(pl.LightningDataModule):
         variable = data['variable']
         timestamp = pd.DatetimeIndex(data['timestamp'])
 
-        # time_feature
-        time_feature = []
-        for tf_cls in self.time_feature_cls:
-            if tf_cls == "tod":
-                tod_size = int((24 * 60) / self.config['freq']) - 1
-                tod = np.array(list(map(lambda x: ((60 * x.hour + x.minute) / self.config['freq']), timestamp)))
-                if self.norm_time_feature:
-                    time_feature.append(tod / tod_size)
-                else:
-                    time_feature.append(tod)
-            elif tf_cls == "dow":
-                dow_size = 7 - 1
-                dow = np.array(timestamp.dayofweek)  # 0 ~ 6
-                if self.norm_time_feature:
-                    time_feature.append(dow / dow_size)
-                else:
-                    time_feature.append(dow)
-            elif tf_cls == "dom":
-                dom_size = 31 - 1
-                dom = np.array(timestamp.day) - 1  # 0 ~ 30
-                if self.norm_time_feature:
-                    time_feature.append(dom / dom_size)
-                else:
-                    time_feature.append(dom)
-            elif tf_cls == "doy":
-                doy_size = 366 - 1
-                doy = np.array(timestamp.dayofyear) - 1  # 0 ~ 181
-                if self.norm_time_feature:
-                    time_feature.append(doy / doy_size)
-                else:
-                    time_feature.append(doy)
-            else:
-                raise NotImplementedError
+        if self.config['include_time_feature']:
+          # time_feature
+          time_feature = []
+          for tf_cls in self.time_feature_cls:
+              if tf_cls == "tod":
+                  tod_size = int((24 * 60) / self.config['freq']) - 1
+                  tod = np.array(list(map(lambda x: ((60 * x.hour + x.minute) / self.config['freq']), timestamp)))
+                  if self.norm_time_feature:
+                      time_feature.append(tod / tod_size)
+                  else:
+                      time_feature.append(tod)
+              elif tf_cls == "dow":
+                  dow_size = 7 - 1
+                  dow = np.array(timestamp.dayofweek)  # 0 ~ 6
+                  if self.norm_time_feature:
+                      time_feature.append(dow / dow_size)
+                  else:
+                      time_feature.append(dow)
+              elif tf_cls == "dom":
+                  dom_size = 31 - 1
+                  dom = np.array(timestamp.day) - 1  # 0 ~ 30
+                  if self.norm_time_feature:
+                      time_feature.append(dom / dom_size)
+                  else:
+                      time_feature.append(dom)
+              elif tf_cls == "doy":
+                  doy_size = 366 - 1
+                  doy = np.array(timestamp.dayofyear) - 1  # 0 ~ 181
+                  if self.norm_time_feature:
+                      time_feature.append(doy / doy_size)
+                  else:
+                      time_feature.append(doy)
+              else:
+                  raise NotImplementedError
 
-        return variable, np.stack(time_feature, axis=-1)
+          return variable, np.stack(time_feature, axis=-1)
+        else:
+          return variable, None
 
     def train_dataloader(self):
         return DataLoader(
