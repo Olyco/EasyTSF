@@ -24,7 +24,7 @@ class LTSFRunner(L.LightningModule):
 
     def forward(self, batch, batch_idx):
         var_x, var_y = [_.float() for _ in batch]
-        if self.hparams.model_name == "KAN" or self.hparams.model_name == "MLP":
+        if self.hparams.model_name == "KAN" or self.hparams.model_name == "MLP" or self.hparams.model_name == "eff_KAN:
           label = var_y[:, -self.hparams.pred_len:]
           prediction = self.model(var_x)[:, -self.hparams.pred_len:]
         else:
