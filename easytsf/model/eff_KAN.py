@@ -237,7 +237,7 @@ class KANLinear(torch.nn.Module):
         )
 
 
-class effKAN(torch.nn.Module):
+class eff_KAN(torch.nn.Module):
     def __init__(
         self,
         layers_hidden,
@@ -250,7 +250,7 @@ class effKAN(torch.nn.Module):
         grid_eps=0.02,
         grid_range=[-1, 1],
     ):
-        super(effKAN, self).__init__()
+        super(eff_KAN, self).__init__()
         self.grid_size = grid_size
         self.spline_order = spline_order
 
