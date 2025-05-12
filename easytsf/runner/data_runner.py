@@ -33,7 +33,7 @@ class GeneralTSFDataset(Dataset):
           var_y = np.concatenate((var_y, tf_y), axis=-1)
 
         
-        if self.model_name == "KAN" or self.model_name == "MLP":
+        if self.model_name == "KAN" or self.model_name == "MLP" or self.model_name == "eff_KAN":
           var_x = var_x.reshape(-1)
           var_y = var_y.reshape(-1)
 
