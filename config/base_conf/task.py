@@ -22,4 +22,7 @@ task_conf = dict(
     file_format="csv",
 
     num_workers=2,
+
+    save_root="drive/MyDrive/VKR/Results/save",
+    data_root="drive/MyDrive/VKR/Data/Time series",
 )
