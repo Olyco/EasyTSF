@@ -31,22 +31,22 @@ def load_config(exp_conf_path):
     # conf 融合，参数优先级: exp_conf > task_conf = data_conf
     fused_conf = {**task_conf, **data_conf}
     fused_conf.update(exp_conf)
-    fused_conf["save_root"] = os.path.join(fused_conf["save_root"], '{}'.format(datetime.now(pytz.timezone('Europe/Moscow')).strftime("%d%m%y_%H%M")))
-    if fused_conf["model_name"] == "KAN":
-      fused_conf["ckpt_path"] = os.path.join(fused_conf["save_root"], "model")
 
     return fused_conf
 
 
 def train_func(hyper_conf, conf):
-    if hyper_conf is not None:
+    if hyper_conf is not None: # add training config
         for k, v in hyper_conf.items():
-          if k != "save_root":
             conf[k] = v
     conf['conf_hash'] = cal_conf_hash(conf, hash_len=10)
 
     L.seed_everything(conf["seed"])
-    save_dir = os.path.join(conf["save_root"], '{}_{}'.format(conf["model_name"], conf["dataset_name"]))
+    save_dir = os.path.join(conf["save_root"], '{}_{}_{}'.format(conf["model_name"], conf["dataset_name"], datetime.now(pytz.timezone('Europe/Moscow')).strftime("%d%m%y_%H%M")))
+    
+    if conf["model_name"] == "KAN":
+      conf["ckpt_path"] = os.path.join(save_dir, "model")
+
     if "use_wandb" in conf and conf["use_wandb"]:
         run_logger = WandbLogger(save_dir=save_dir, name=conf["conf_hash"], version='seed_{}'.format(conf["seed"]))
     else:
@@ -92,9 +92,9 @@ def train_func(hyper_conf, conf):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--config", type=str)
-    parser.add_argument("-d", "--data_root", default="EasyTSF/dataset", type=str, help="data root")
-    parser.add_argument("-s", "--save_root", default="save", help="save root")
+    parser.add_argument("-c", "--config", type=str) # experiment config
+    parser.add_argument("-d", "--data_root", default="drive/MyDrive/VKR/Data/Time series", type=str, help="data root")
+    parser.add_argument("-s", "--save_root", default="drive/MyDrive/VKR/Results/save", help="save root")
     parser.add_argument("--devices", default='auto', type=str, help="device' id to use")
     parser.add_argument("--use_wandb", default=0, type=int, help="use wandb")
     parser.add_argument("--seed", type=int, default=1, help="seed")

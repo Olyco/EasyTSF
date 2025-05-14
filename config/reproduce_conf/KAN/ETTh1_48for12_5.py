@@ -13,5 +13,5 @@ exp_conf = dict(
 
     lr=0.01,
 
-    save_root="drive/MyDrive/VKR/Results/save"
+    # ckpt_path= "drive/MyDrive/VKR/Results/save/model"
 )

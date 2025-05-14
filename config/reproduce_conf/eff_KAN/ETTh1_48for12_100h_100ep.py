@@ -1,13 +1,13 @@
 exp_conf = dict(
-    model_name="KAN",
+    model_name="eff_KAN",
     dataset_name='ETTh1',
 
     hist_len=48,
     pred_len=12,
 
-    max_epochs=5,
+    max_epochs=100,
 
-    width=[48 * 7, 5, 12 * 7],
+    layers_hidden=[48 * 7, 100 , 12 * 7],
     grid=3,
     k=3,
 

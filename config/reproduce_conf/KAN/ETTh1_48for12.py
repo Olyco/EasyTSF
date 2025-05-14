@@ -12,6 +12,4 @@ exp_conf = dict(
     k=3,
 
     lr=0.01,
-
-    save_root="drive/MyDrive/VKR/Results/save"
 )

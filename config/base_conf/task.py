@@ -16,13 +16,11 @@ task_conf = dict(
     test_metric="test/mae",
     es_patience=10,
 
+    norm_variable = True,
     norm_time_feature=False,
     include_time_feature = False,
     time_feature_cls=["tod", "dow"],
     file_format="csv",
 
     num_workers=2,
-
-    save_root="drive/MyDrive/VKR/Results/save",
-    data_root="drive/MyDrive/VKR/Data/Time series",
 )
