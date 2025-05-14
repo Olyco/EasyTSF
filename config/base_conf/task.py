@@ -19,6 +19,7 @@ task_conf = dict(
     norm_time_feature=False,
     include_time_feature = False,
     time_feature_cls=["tod", "dow"],
+    file_format="csv",
 
     num_workers=2,
 )

@@ -54,15 +54,21 @@ class DataInterface(pl.LightningDataModule):
         self.norm_time_feature = kwargs['norm_time_feature']
         self.train_len, self.val_len, self.test_len = kwargs['data_split']
         self.time_feature_cls = kwargs['time_feature_cls']
+        self.file_format = kwargs['file_format']
 
-        self.data_path = os.path.join(kwargs['data_root'], "{}.npz".format(kwargs['dataset_name']))
+        self.data_path = os.path.join(kwargs['data_root'], "{}.{}".format(kwargs['dataset_name'], self.file_format))
         self.config = kwargs
 
         self.variable, self.time_feature = self.__read_data__()
 
     def __read_data__(self):
-        data = np.load(self.data_path)
-        variable = data['variable']
+        if self.file_format == "npz":
+            data = np.load(self.data_path)
+            variable = data['variable']
+        elif self.file_format == "csv":
+            data = pd.read_csv(self.data_path)
+            data = data.rename(columns={'date': 'timestamp'})
+            variable = data.iloc[:, 1:].to_numpy()
         timestamp = pd.DatetimeIndex(data['timestamp'])
 
         # time_feature
