@@ -52,16 +52,17 @@ class DataInterface(pl.LightningDataModule):
         self.batch_size = kwargs['batch_size']
         self.hist_len = kwargs['hist_len']
         self.pred_len = kwargs['pred_len']
+        self.norm_variable = kwargs['norm_variable']
         self.norm_time_feature = kwargs['norm_time_feature']
         self.train_len, self.val_len, self.test_len = kwargs['data_split']
         self.time_feature_cls = kwargs['time_feature_cls']
         self.file_format = kwargs['file_format']
-        self.scaler =  MinMaxScaler()
+        #self.scaler =  MinMaxScaler()
 
         self.data_path = os.path.join(kwargs['data_root'], "{}.{}".format(kwargs['dataset_name'], self.file_format))
         self.config = kwargs
 
-        self.variable, self.time_feature = self.__read_data__()
+        self.variable, self.time_feature, self.scaler = self.__read_data__()
 
     def __read_data__(self):
         if self.file_format == "npz":
@@ -72,6 +73,11 @@ class DataInterface(pl.LightningDataModule):
             data = data.rename(columns={'date': 'timestamp'})
             variable = data.iloc[:, 1:].to_numpy()
         timestamp = pd.DatetimeIndex(data['timestamp'])
+
+        # scale data
+        scaler = MinMaxScaler()
+        if self.norm_variable:
+            scaler.fit(variable[:self.train_len])
 
         # time_feature
         time_feature = []
@@ -107,11 +113,11 @@ class DataInterface(pl.LightningDataModule):
             else:
                 raise NotImplementedError
 
-        return variable, np.stack(time_feature, axis=-1)
+        return variable, np.stack(time_feature, axis=-1), scaler
   
 
     def train_dataloader(self):
-        scaled_train_var = self.scaler.fit_transform(self.variable[:self.train_len])
+        scaled_train_var = self.scaler.transform(self.variable[:self.train_len])
         return DataLoader(
             dataset=GeneralTSFDataset(
                 self.hist_len,
