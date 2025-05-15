@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
+from sklearn.preprocessing import MinMaxScaler
 
 
 class GeneralTSFDataset(Dataset):
@@ -55,6 +56,7 @@ class DataInterface(pl.LightningDataModule):
         self.train_len, self.val_len, self.test_len = kwargs['data_split']
         self.time_feature_cls = kwargs['time_feature_cls']
         self.file_format = kwargs['file_format']
+        self.scaler =  MinMaxScaler()
 
         self.data_path = os.path.join(kwargs['data_root'], "{}.{}".format(kwargs['dataset_name'], self.file_format))
         self.config = kwargs
@@ -109,11 +111,12 @@ class DataInterface(pl.LightningDataModule):
   
 
     def train_dataloader(self):
+        scaled_train_var = self.scaler.fit_transform(self.variable[:self.train_len])
         return DataLoader(
             dataset=GeneralTSFDataset(
                 self.hist_len,
                 self.pred_len,
-                self.variable[:self.train_len].copy(),
+                scaled_train_var,
                 self.time_feature[:self.train_len].copy(),
                 self.config["model_name"],
                 self.config['include_time_feature'],
@@ -125,11 +128,12 @@ class DataInterface(pl.LightningDataModule):
         )
 
     def val_dataloader(self):
+        scaled_val_var = self.scaler.transform(self.variable[self.train_len - self.hist_len:self.train_len + self.val_len])
         return DataLoader(
             dataset=GeneralTSFDataset(
                 self.hist_len,
                 self.pred_len,
-                self.variable[self.train_len - self.hist_len:self.train_len + self.val_len].copy(),
+                scaled_val_var,
                 self.time_feature[self.train_len - self.hist_len:self.train_len + self.val_len].copy(),
                 self.config["model_name"],
                 self.config['include_time_feature'],
@@ -141,11 +145,12 @@ class DataInterface(pl.LightningDataModule):
         )
 
     def test_dataloader(self):
+        scaled_test_var = self.scaler.transform(self.variable[self.train_len + self.val_len - self.hist_len:])
         return DataLoader(
             dataset=GeneralTSFDataset(
                 self.hist_len,
                 self.pred_len,
-                self.variable[self.train_len + self.val_len - self.hist_len:].copy(),
+                scaled_test_var,
                 self.time_feature[self.train_len + self.val_len - self.hist_len:].copy(),
                 self.config["model_name"],
                 self.config['include_time_feature'],
