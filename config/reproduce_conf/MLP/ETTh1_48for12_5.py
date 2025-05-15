@@ -1,5 +1,5 @@
 exp_conf = dict(
-    model_name="KAN",
+    model_name="MLP",
     dataset_name='ETTh1',
 
     hist_len=48,

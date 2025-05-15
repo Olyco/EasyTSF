@@ -2,7 +2,7 @@ ETTh1_conf = dict(
     dataset_name='ETTh1',
     var_num=7,
     freq=60,
-    data_split=[8640, 2880, 2880],
+    data_split=[12194, 2613, 2613],
 )
 
 ETTh2_conf = dict(
