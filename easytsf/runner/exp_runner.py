@@ -19,9 +19,9 @@ class LTSFRunner(L.LightningModule):
         self.load_model()
         self.configure_loss()
 
-        stat = np.load(os.path.join(self.hparams.data_root, '{}.npz'.format(self.hparams.dataset_name)))
-        self.register_buffer('mean', torch.tensor(stat['mean']).float())
-        self.register_buffer('std', torch.tensor(stat['std']).float())
+        # stat = np.load(os.path.join(self.hparams.data_root, '{}.npz'.format(self.hparams.dataset_name)))
+        # self.register_buffer('mean', torch.tensor(stat['mean']).float())
+        # self.register_buffer('std', torch.tensor(stat['std']).float())
 
     def forward(self, batch, batch_idx):
         var_x, var_y = [_.float() for _ in batch]
@@ -47,10 +47,10 @@ class LTSFRunner(L.LightningModule):
         prediction, label = self.forward(batch, batch_idx)
         mae = torch.nn.functional.l1_loss(prediction, label)
         mse = torch.nn.functional.mse_loss(prediction, label)
-        r2 = r2_score(prediction, label)
+        # r2 = r2_score(prediction, label)
         self.log('test/mae', mae, on_step=False, on_epoch=True, sync_dist=True)
         self.log('test/mse', mse, on_step=False, on_epoch=True, sync_dist=True)
-        self.log('test/r2', r2, on_step=False, on_epoch=True, sync_dist=True)
+        # self.log('test/r2', r2, on_step=False, on_epoch=True, sync_dist=True)
 
     def configure_loss(self):
         self.loss_function = nn.MSELoss()
