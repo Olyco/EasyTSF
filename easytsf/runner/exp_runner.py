@@ -7,6 +7,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim.lr_scheduler as lrs
+from torcheval.metrics.functional import r2_score
 
 from kan import KAN
 
@@ -46,8 +47,10 @@ class LTSFRunner(L.LightningModule):
         prediction, label = self.forward(batch, batch_idx)
         mae = torch.nn.functional.l1_loss(prediction, label)
         mse = torch.nn.functional.mse_loss(prediction, label)
+        r2 = r2_score(prediction, label)
         self.log('test/mae', mae, on_step=False, on_epoch=True, sync_dist=True)
         self.log('test/mse', mse, on_step=False, on_epoch=True, sync_dist=True)
+        self.log('test/r2', r2, on_step=False, on_epoch=True, sync_dist=True)
 
     def configure_loss(self):
         self.loss_function = nn.MSELoss()
