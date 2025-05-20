@@ -35,9 +35,9 @@ ECL_conf = dict(
 
 Weather_conf = dict(
     dataset_name='Weather',
-    var_num=21,
-    freq=10,
-    data_split=[36887, 5270, 10539],
+    var_num=20,
+    freq=60,
+    data_split=[21024, 1314, 3942],
 )
 
 Traffic_conf = dict(
