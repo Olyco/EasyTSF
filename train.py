@@ -4,6 +4,8 @@ import importlib.util
 import os
 from datetime import datetime
 import pytz
+import matplotlib.pyplot as plt
+
 
 import lightning.pytorch as L
 from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint, EarlyStopping
@@ -15,6 +17,18 @@ from easytsf.runner.exp_runner import LTSFRunner
 from easytsf.util import cal_conf_hash
 from easytsf.util import load_module_from_path
 
+
+def plot_loss(logger):
+    train_loss = logger.get('train/loss')
+    val_loss = logger.get('val/loss')
+
+    # Plot the loss curves
+    plt.plot(train_loss, label='train loss')
+    plt.plot(val_loss, label='validation loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Loss Curve')
+    plt.show()
 
 def load_config(exp_conf_path):
     # 加载 exp_conf
@@ -39,19 +53,19 @@ def train_func(hyper_conf, conf):
     if hyper_conf is not None: # add training config
         for k, v in hyper_conf.items():
             conf[k] = v
-    conf['conf_hash'] = cal_conf_hash(conf, hash_len=10)
+    conf['exp_time'] = datetime.now(pytz.timezone('Europe/Moscow')).strftime("%d%m%y_%H%M")
 
     L.seed_everything(conf["seed"])
-    save_dir = os.path.join(conf["save_root"], '{}_{}_{}'.format(conf["model_name"], conf["dataset_name"], datetime.now(pytz.timezone('Europe/Moscow')).strftime("%d%m%y_%H%M")))
+    save_dir = os.path.join(conf["save_root"], '{}_{}'.format(conf["model_name"], conf["dataset_name"]))
     
     if conf["model_name"] == "KAN":
       conf["ckpt_path"] = os.path.join(save_dir, "model")
 
     if "use_wandb" in conf and conf["use_wandb"]:
-        run_logger = WandbLogger(save_dir=save_dir, name=conf["conf_hash"], version='seed_{}'.format(conf["seed"]))
+        run_logger = WandbLogger(save_dir=save_dir, name=conf["exp_time"], version='seed_{}'.format(conf["seed"]))
     else:
-        run_logger = CSVLogger(save_dir=save_dir, name=conf["conf_hash"], version='seed_{}'.format(conf["seed"]))
-    conf["exp_dir"] = os.path.join(save_dir, conf["conf_hash"], 'seed_{}'.format(conf["seed"]))
+        run_logger = CSVLogger(save_dir=save_dir, name=conf["exp_time"], version='seed_{}'.format(conf["seed"]))
+    conf["exp_dir"] = os.path.join(save_dir, conf["exp_time"], 'seed_{}'.format(conf["seed"]))
 
     callbacks = [
         ModelCheckpoint(
@@ -87,6 +101,7 @@ def train_func(hyper_conf, conf):
     model = LTSFRunner(**conf)
 
     trainer.fit(model=model, datamodule=data_module)
+    #plot_loss(run_logger)
     trainer.test(model, datamodule=data_module, ckpt_path='best')
 
 
