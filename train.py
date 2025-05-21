@@ -59,7 +59,7 @@ def train_func(hyper_conf, conf):
     save_dir = os.path.join(conf["save_root"], '{}_{}'.format(conf["model_name"], conf["dataset_name"]))
     
     if conf["model_name"] == "KAN":
-      conf["ckpt_path"] = os.path.join(save_dir, "model")
+      conf["ckpt_path"] = os.path.join(save_dir, conf['exp_time'], "model")
 
     if "use_wandb" in conf and conf["use_wandb"]:
         run_logger = WandbLogger(save_dir=save_dir, name=conf["exp_time"], version='seed_{}'.format(conf["seed"]))
