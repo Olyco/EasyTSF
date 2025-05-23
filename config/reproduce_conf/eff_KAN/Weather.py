@@ -8,8 +8,8 @@ exp_conf = dict(
     max_epochs=50,
 
     layers_hidden=[24 * 20, 2, 6 * 20],
-    grid=3,
-    k=3,
+    grid_size=3,
+    spline_order=3,
 
-    lr=0.000001,
+    lr=0.0001,
 )
