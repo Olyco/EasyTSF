@@ -120,7 +120,6 @@ class LTSFRunner(L.LightningModule):
         elif model_name == "N_BEATS":
             self.model = self.instancialize(NBeats)
             print(ModelSummary(self.model, max_depth=-1))
-            print(ModelSummary(self.model, max_depth=-1))
         else:
           Model = getattr(importlib.import_module('.' + model_name, package='easytsf.model'), model_name)
           self.model = self.instancialize(Model)

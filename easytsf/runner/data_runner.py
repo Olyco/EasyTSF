@@ -63,7 +63,20 @@ class DataInterface(pl.LightningDataModule):
         self.config = kwargs
 
         self.variable, self.time_feature, self.scaler = self.__read_data__()
-        self.train_dataset = None
+        if self.config['model_name'] == 'N_BEATS':
+            train_df_cut = self.variable.loc[self.variable['index'] < self.train_len]
+            self.train_dataset = TimeSeriesDataSet(
+                train_df_cut,
+                group_ids=["id"],
+                target="variable",
+                time_idx="index",
+                min_encoder_length=self.hist_len,
+                max_encoder_length=self.hist_len,
+                min_prediction_length=self.pred_len,
+                max_prediction_length=self.pred_len,
+                time_varying_unknown_reals=["variable"],
+                scalers = None,
+            )
 
     def __read_data__(self):
         if self.file_format == "npz":
@@ -129,19 +142,19 @@ class DataInterface(pl.LightningDataModule):
 
     def train_dataloader(self):
         if self.config['model_name'] == 'N_BEATS':
-            train_df_cut = self.variable.loc[self.variable['index'] < self.train_len]
-            self.train_dataset = TimeSeriesDataSet(
-                train_df_cut,
-                group_ids=["id"],
-                target="variable",
-                time_idx="index",
-                min_encoder_length=self.hist_len,
-                max_encoder_length=self.hist_len,
-                min_prediction_length=self.pred_len,
-                max_prediction_length=self.pred_len,
-                time_varying_unknown_reals=["variable"],
-                scalers = None,
-            )
+            # train_df_cut = self.variable.loc[self.variable['index'] < self.train_len]
+            # self.train_dataset = TimeSeriesDataSet(
+            #     train_df_cut,
+            #     group_ids=["id"],
+            #     target="variable",
+            #     time_idx="index",
+            #     min_encoder_length=self.hist_len,
+            #     max_encoder_length=self.hist_len,
+            #     min_prediction_length=self.pred_len,
+            #     max_prediction_length=self.pred_len,
+            #     time_varying_unknown_reals=["variable"],
+            #     scalers = None,
+            # )
             return self.train_dataset.to_dataloader(
                 train=True, 
                 batch_size=self.batch_size, 
