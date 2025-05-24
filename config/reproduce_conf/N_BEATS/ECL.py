@@ -22,7 +22,7 @@ exp_conf = dict(
     sharing=False,
     expansion_coefficient_lengths=[32],
     backcast_loss_ratio=0.3,
-    loss=RMSE(),
+    loss='MAE',
 
     lr=0.001,
 )

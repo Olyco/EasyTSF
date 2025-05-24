@@ -63,6 +63,7 @@ class DataInterface(pl.LightningDataModule):
         self.config = kwargs
 
         self.variable, self.time_feature, self.scaler = self.__read_data__()
+        self.train_dataset = None
 
     def __read_data__(self):
         if self.file_format == "npz":

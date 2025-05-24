@@ -8,6 +8,9 @@ import torch
 import torch.nn as nn
 import torch.optim.lr_scheduler as lrs
 from torcheval.metrics.functional import r2_score
+from lightning.pytorch.utilities.model_summary import ModelSummary
+import pytorch_forecasting.metrics
+
 
 from kan import KAN
 from pytorch_forecasting import NBeats
@@ -16,7 +19,7 @@ from pytorch_forecasting import NBeats
 class LTSFRunner(L.LightningModule):
     def __init__(self, **kargs):
         super().__init__()
-        self.save_hyperparameters()
+        self.save_hyperparameters() #ignore=['loss', 'logging_metrics'])
         self.load_model()
         self.configure_loss()
 
@@ -54,7 +57,12 @@ class LTSFRunner(L.LightningModule):
         # self.log('test/r2', r2, on_step=False, on_epoch=True, sync_dist=True)
 
     def configure_loss(self):
-        self.loss_function = nn.MSELoss()
+        if self.hparams.model_name == "N_BEATS":
+            _loss = getattr(pytorch_forecasting.metrics, self.hparams.loss)
+            # _loss = getattr(torch.nn.functional, self.hparams.loss)
+            self.loss_function = _loss
+        else:
+            self.loss_function = nn.MSELoss()
 
     def configure_optimizers(self):
         if self.hparams.optimizer == 'Adam':
@@ -111,6 +119,7 @@ class LTSFRunner(L.LightningModule):
           self.model = self.instancialize(KAN)
         elif model_name == "N_BEATS":
             self.model = self.instancialize(NBeats)
+            print(ModelSummary(self.model, max_depth=-1))
         else:
           Model = getattr(importlib.import_module('.' + model_name, package='easytsf.model'), model_name)
           self.model = self.instancialize(Model)
