@@ -8,6 +8,8 @@ import torch
 import torch.nn as nn
 import torch.optim.lr_scheduler as lrs
 from torcheval.metrics.functional import r2_score
+from lightning.pytorch.utilities.model_summary import ModelSummary
+
 
 from kan import KAN
 from pytorch_forecasting import NBeats
@@ -111,6 +113,7 @@ class LTSFRunner(L.LightningModule):
           self.model = self.instancialize(KAN)
         elif model_name == "N_BEATS":
             self.model = self.instancialize(NBeats)
+            print(ModelSummary(self.model, max_depth=-1))
         else:
           Model = getattr(importlib.import_module('.' + model_name, package='easytsf.model'), model_name)
           self.model = self.instancialize(Model)
