@@ -58,14 +58,17 @@ def train_func(hyper_conf, conf):
     L.seed_everything(conf["seed"])
     save_dir = os.path.join(conf["save_root"], '{}_{}'.format(conf["model_name"], conf["dataset_name"]))
     
-    if conf["model_name"] == "KAN":
-      conf["ckpt_path"] = os.path.join(save_dir, conf['exp_time'], "model")
+    # if conf["model_name"] == "KAN":
+    #   conf["ckpt_path"] = os.path.join(save_dir, conf['exp_time'], "model")
 
     if "use_wandb" in conf and conf["use_wandb"]:
         run_logger = WandbLogger(save_dir=save_dir, name=conf["exp_time"], version='seed_{}'.format(conf["seed"]))
     else:
         run_logger = CSVLogger(save_dir=save_dir, name=conf["exp_time"], version='seed_{}'.format(conf["seed"]))
     conf["exp_dir"] = os.path.join(save_dir, conf["exp_time"], 'seed_{}'.format(conf["seed"]))
+
+    if conf["model_name"] == "KAN":
+        conf["ckpt_path"] = os.path.join(conf["exp_dir"], "model")
 
     callbacks = [
         ModelCheckpoint(
@@ -101,6 +104,9 @@ def train_func(hyper_conf, conf):
     model = LTSFRunner(**conf)
 
     trainer.fit(model=model, datamodule=data_module)
+    if conf["model_name"] == "KAN":
+        model.model.saveckpt() # в файлы колаба
+
     #plot_loss(run_logger)
     trainer.test(model, datamodule=data_module, ckpt_path='best')
 
@@ -108,8 +114,8 @@ def train_func(hyper_conf, conf):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--config", type=str) # experiment config
-    parser.add_argument("-d", "--data_root", default="drive/MyDrive/VKR/Data/Time series", type=str, help="data root")
-    parser.add_argument("-s", "--save_root", default="drive/MyDrive/VKR/Results/save", help="save root")
+    parser.add_argument("-d", "--data_root", default="drive/MyDrive/VKR/Data/Time series", type=str, help="data root") # "drive/MyDrive/Оля/"
+    parser.add_argument("-s", "--save_root", default="drive/MyDrive/VKR/Results/save", help="save root") # "drive/MyDrive/Оля/save"
     parser.add_argument("--devices", default='auto', type=str, help="device' id to use")
     parser.add_argument("--use_wandb", default=0, type=int, help="use wandb")
     parser.add_argument("--seed", type=int, default=1, help="seed")

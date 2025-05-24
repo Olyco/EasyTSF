@@ -6,6 +6,7 @@ import pandas as pd
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 from sklearn.preprocessing import MinMaxScaler
+from pytorch_forecasting import TimeSeriesDataSet
 
 
 class GeneralTSFDataset(Dataset):
@@ -57,7 +58,6 @@ class DataInterface(pl.LightningDataModule):
         self.train_len, self.val_len, self.test_len = kwargs['data_split']
         self.time_feature_cls = kwargs['time_feature_cls']
         self.file_format = kwargs['file_format']
-        #self.scaler =  MinMaxScaler()
 
         self.data_path = os.path.join(kwargs['data_root'], "{}.{}".format(kwargs['dataset_name'], self.file_format))
         self.config = kwargs
@@ -72,6 +72,16 @@ class DataInterface(pl.LightningDataModule):
             data = pd.read_csv(self.data_path)
             data = data.rename(columns={'date': 'timestamp'})
             variable = data.iloc[:, 1:].to_numpy()
+
+            if self.config['model_name'] == 'N_BEATS':
+                print("prepare N-Beats data")
+                concatenated_df = pd.DataFrame()
+                for i in range(10): # первые 10 потребителей #(variable.shape[1]):
+                    ts = pd.DataFrame(data={'variable': variable.T[i], 'id': [i for var in range(variable.shape[0])]}) # каждый ряд помечается id
+                concatenated_df = pd.concat([concatenated_df, ts])
+                concatenated_df = concatenated_df.reset_index()
+                variable = concatenated_df # returns dataframe
+
         timestamp = pd.DatetimeIndex(data['timestamp'])
 
         # scale data
@@ -117,6 +127,28 @@ class DataInterface(pl.LightningDataModule):
   
 
     def train_dataloader(self):
+        if self.config['model_name'] == 'N_BEATS':
+            train_df_cut = self.variable.loc[self.variable['index'] < self.train_len]
+            self.train_dataset = TimeSeriesDataSet(
+                train_df_cut,
+                group_ids=["id"],
+                target="variable",
+                time_idx="index",
+                min_encoder_length=self.hist_len,
+                max_encoder_length=self.hist_len,
+                min_prediction_length=self.pred_len,
+                max_prediction_length=self.pred_len,
+                time_varying_unknown_reals=["variable"],
+                scalers = None,
+            )
+            return self.train_dataset.to_dataloader(
+                train=True, 
+                batch_size=self.batch_size, 
+                num_workers=self.num_workers, 
+                shuffle=False,
+                drop_last=True
+                )
+
         scaled_train_var = self.scaler.transform(self.variable[:self.train_len])
         return DataLoader(
             dataset=GeneralTSFDataset(
@@ -134,6 +166,17 @@ class DataInterface(pl.LightningDataModule):
         )
 
     def val_dataloader(self):
+        if self.config['model_name'] == 'N_BEATS':
+            val_df_cut = self.variable.loc[self.variable['index'].isin(range(self.train_len, self.train_len + self.val_len))]
+            validation_dataset = TimeSeriesDataSet.from_dataset(self.train_dataset, val_df_cut)
+            return validation_dataset.to_dataloader(
+                train=False, 
+                batch_size=self.batch_size, # уменьшить?
+                num_workers=self.num_workers,
+                shuffle=False,
+                drop_last=False
+            )
+
         scaled_val_var = self.scaler.transform(self.variable[self.train_len - self.hist_len:self.train_len + self.val_len])
         return DataLoader(
             dataset=GeneralTSFDataset(
@@ -151,6 +194,15 @@ class DataInterface(pl.LightningDataModule):
         )
 
     def test_dataloader(self):
+        if self.config['model_name'] == 'N_BEATS':
+            test_df_cut = self.variable.loc[self.variable['index'] >= self.train_len + self.val_len]
+            test_dataset = TimeSeriesDataSet.from_dataset(self.train_dataset, test_df_cut)
+            return test_dataset.to_dataloader(
+                train=False, 
+                batch_size=1, 
+                num_workers=self.num_workers
+            )
+
         scaled_test_var = self.scaler.transform(self.variable[self.train_len + self.val_len - self.hist_len:])
         return DataLoader(
             dataset=GeneralTSFDataset(

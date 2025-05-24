@@ -10,6 +10,7 @@ import torch.optim.lr_scheduler as lrs
 from torcheval.metrics.functional import r2_score
 
 from kan import KAN
+from pytorch_forecasting import NBeats
 
 
 class LTSFRunner(L.LightningModule):
@@ -108,6 +109,8 @@ class LTSFRunner(L.LightningModule):
         model_name = self.hparams.model_name
         if model_name == "KAN":
           self.model = self.instancialize(KAN)
+        elif model_name == "N_BEATS":
+            self.model = self.instancialize(NBeats)
         else:
           Model = getattr(importlib.import_module('.' + model_name, package='easytsf.model'), model_name)
           self.model = self.instancialize(Model)
