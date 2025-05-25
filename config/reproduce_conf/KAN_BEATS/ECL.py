@@ -1,0 +1,34 @@
+from pytorch_forecasting.metrics import MAE, MAPE, MASE, RMSE, SMAPE
+
+exp_conf = dict(
+    model_name="KAN_BEATS",
+    dataset_name='ECL',
+
+    # norm_variable=False,
+
+    hist_len=24,
+    pred_len=12,
+
+    max_epochs=3,
+
+    grid_size=3,
+    spline_order=3,
+
+    stack_types=['generic'],
+    num_blocks=[2],
+    num_block_layers=[2],
+    widths=[64],
+    sharing=False,
+    expansion_coefficient_lengths=[32],
+    backcast_loss_ratio=0.3,
+    loss=MAE(),
+
+    log_interval=10,
+    # log_val_interval=1,
+    log_gradient_flow=False,
+    weight_decay=1e-2,
+
+    learning_rate=0.001,
+    lr=0.001,
+    reduce_on_plateau_patience=10,
+)
