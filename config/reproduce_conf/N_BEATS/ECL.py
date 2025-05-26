@@ -1,4 +1,6 @@
 from pytorch_forecasting.metrics import MAE, MAPE, MASE, RMSE, SMAPE
+from .....EasyTSF.easytsf.model.KAN_BEATS import customR2Score
+from torch import nn
 
 exp_conf = dict(
     model_name="N_BEATS",
@@ -21,6 +23,7 @@ exp_conf = dict(
     expansion_coefficient_lengths=[32],
     backcast_loss_ratio=0.1,
     loss=MAE(),
+    logging_metrics=nn.ModuleList([SMAPE(), MAE(), RMSE(), MAPE(), MASE(), customR2Score()]),
 
     val_metric="val_loss",
     test_metric="test_mae",

@@ -31,6 +31,16 @@ from typing import Tuple
 
 import numpy as np
 import torch.nn.functional as F
+from torcheval.metrics import R2Score
+
+
+class customR2Score(MultiHorizonMetric):
+
+    def loss(self, y_pred, target):
+        metric = R2Score(multioutput="uniform_average")
+        metric.update(self.to_prediction(y_pred), target)
+        r2 = metric.compute()
+        return r2
 
 
 def linear(input_size, output_size, bias=True, dropout: int = None):
@@ -524,7 +534,7 @@ class NBeats(BaseModel):
         if stack_types is None:
             stack_types = ["trend", "seasonality"]
         if logging_metrics is None:
-            logging_metrics = nn.ModuleList([SMAPE(), MAE(), RMSE(), MAPE(), MASE()])
+            logging_metrics = nn.ModuleList([SMAPE(), MAE(), RMSE(), MAPE(), MASE(), customR2Score()])
         if loss is None:
             loss = MASE()
         self.save_hyperparameters()
@@ -941,7 +951,7 @@ class KANBeats(BaseModel):
         if stack_types is None:
             stack_types = ["trend", "seasonality"]
         if logging_metrics is None:
-            logging_metrics = nn.ModuleList([SMAPE(), MAE(), RMSE(), MAPE(), MASE()])
+            logging_metrics = nn.ModuleList([SMAPE(), MAE(), RMSE(), MAPE(), MASE(), customR2Score()])
         if loss is None:
             loss = MASE()
         self.save_hyperparameters()
