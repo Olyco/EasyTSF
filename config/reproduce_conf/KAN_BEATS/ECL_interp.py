@@ -4,6 +4,7 @@ exp_conf = dict(
     model_name="KAN_BEATS",
     dataset_name='ECL',
     var_cut=10,
+    data_split=[21043, 2630, 2631],
 
     norm_variable=True,
     batch_sampler='synchronized',
