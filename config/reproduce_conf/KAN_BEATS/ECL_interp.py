@@ -16,13 +16,13 @@ exp_conf = dict(
     grid_size=3,
     spline_order=3,
 
-    stack_types=['generic'],
-    num_blocks=[2],
-    num_block_layers=[2],
-    widths=[64],
+    stack_types=['trend','seasonality'],
+    num_blocks=[2, 2],
+    num_block_layers=[4, 4],
+    widths=[64, 64],
     sharing=False,
-    expansion_coefficient_lengths=[32],
-    backcast_loss_ratio=0.1,
+    expansion_coefficient_lengths=[3, 12],
+    backcast_loss_ratio=0.1,#
     loss=MAE(),
 
     val_metric="val_loss",

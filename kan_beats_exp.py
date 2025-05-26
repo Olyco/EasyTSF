@@ -66,9 +66,22 @@ def prepare_data(config):
     val_data = TimeSeriesDataSet.from_dataset(train_data, val_cut)
     test_data = TimeSeriesDataSet.from_dataset(train_data, test_cut)
 
-    train_dataloader = train_data.to_dataloader(train=True, batch_size=config['batch_size'], num_workers=config['num_workers'])
-    val_dataloader = val_data.to_dataloader(train=False, batch_size=config['batch_size'], num_workers=config['num_workers'])
-    test_dataloader = test_data.to_dataloader(train=False, batch_size=config['batch_size'], num_workers=config['num_workers'])
+    train_dataloader = train_data.to_dataloader(
+        train=True, 
+        batch_size=config['batch_size'], 
+        num_workers=config['num_workers'], 
+        batch_sampler=config['batch_sampler'],
+    )
+    val_dataloader = val_data.to_dataloader(
+        train=False, 
+        batch_size=config['batch_size'], 
+        num_workers=config['num_workers'],
+        )
+    test_dataloader = test_data.to_dataloader(
+        train=False, 
+        batch_size=config['batch_size'], 
+        num_workers=config['num_workers'],
+    )
 
     return train_dataloader, val_dataloader, test_dataloader, train_data
 

@@ -6,6 +6,7 @@ exp_conf = dict(
     var_cut=10,
 
     norm_variable=True,
+    batch_sampler='synchronized',
 
     hist_len=24,
     pred_len=12,
@@ -18,7 +19,7 @@ exp_conf = dict(
     widths=[64],
     sharing=False,
     expansion_coefficient_lengths=[32],
-    backcast_loss_ratio=0.3,
+    backcast_loss_ratio=0.1,
     loss=MAE(),
 
     val_metric="val_loss",
