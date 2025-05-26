@@ -20,7 +20,7 @@ from easytsf.runner.data_runner import DataInterface
 from easytsf.runner.exp_runner import LTSFRunner
 from easytsf.util import load_module_from_path
 
-from .train import load_config
+from train import load_config
 from easytsf.model.KAN_BEATS import KANBeats
 
 
@@ -35,7 +35,6 @@ def prepare_data(config):
         ts = pd.DataFrame(data={'variable': variable.T[i], 'id': [i for var in range(variable.shape[0])]})
         concatenated_df = pd.concat([concatenated_df, ts])
     concatenated_df = concatenated_df.reset_index()
-    print(concatenated_df)
 
     train_cut = concatenated_df.loc[concatenated_df['index'] < config['data_split'][0]]
     print(train_cut)
@@ -116,18 +115,55 @@ def train_func(hyper_conf, conf):
 
     train_dataloader, val_dataloader, test_dataloader, train_data = prepare_data(conf)
 
-    model = KANBeats.from_dataset(
-        train_data,
-
+    if conf['model_name'] == "KAN_BEATS":
+        model = KANBeats.from_dataset(
+            train_data,
+            grid_size=conf['grid_size'],
+            spline_order=conf['spline_order'],
+            stack_types=conf['stack_types'],
+            num_blocks=conf['num_blocks'],
+            num_block_layers=conf['num_block_layers'],
+            widths=conf['widths'],
+            sharing=conf['sharing'],
+            expansion_coefficient_lengths=conf['expansion_coefficient_lengths'],
+            backcast_loss_ratio=conf['backcast_loss_ratio'],
+            loss=conf['loss'],
+            log_interval=conf['log_interval'],
+            log_gradient_flow=conf['log_gradient_flow'],
+            weight_decay=conf['weight_decay'],
+            learning_rate=conf['learning_rate'],
+            reduce_on_plateau_patience=conf['reduce_on_plateau_patience'],
+            )
+    elif conf['model_name'] == "N_BEATS":
+        model = NBeats.from_dataset(
+            train_data,
+            stack_types=conf['stack_types'],
+            num_blocks=conf['num_blocks'],
+            num_block_layers=conf['num_block_layers'],
+            widths=conf['widths'],
+            sharing=conf['sharing'],
+            expansion_coefficient_lengths=conf['expansion_coefficient_lengths'],
+            backcast_loss_ratio=conf['backcast_loss_ratio'],
+            loss=conf['loss'],
+            log_interval=conf['log_interval'],
+            log_gradient_flow=conf['log_gradient_flow'],
+            weight_decay=conf['weight_decay'],
+            learning_rate=conf['learning_rate'],
+            reduce_on_plateau_patience=conf['reduce_on_plateau_patience'],
         )
-    
+    print(model.hparams)
+
     print(ModelSummary(model, max_depth=-1))
 
-    # trainer.fit(model=model, datamodule=data_module)
+    trainer.fit(
+        model=model, 
+        train_dataloaders=train_dataloader,
+        val_dataloaders=val_dataloader
+        )
     # if conf["model_name"] == "KAN":
     #     model.model.saveckpt() # в файлы колаба
 
-    # trainer.test(model, datamodule=data_module, ckpt_path='best')
+    trainer.test(model, dataloaders=test_dataloader, ckpt_path='best')
 
 
 if __name__ == '__main__':

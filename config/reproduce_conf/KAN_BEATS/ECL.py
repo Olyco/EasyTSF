@@ -3,6 +3,7 @@ from pytorch_forecasting.metrics import MAE, MAPE, MASE, RMSE, SMAPE
 exp_conf = dict(
     model_name="KAN_BEATS",
     dataset_name='ECL',
+    var_cut=10,
 
     # norm_variable=False,
 
@@ -22,6 +23,10 @@ exp_conf = dict(
     expansion_coefficient_lengths=[32],
     backcast_loss_ratio=0.3,
     loss=MAE(),
+
+    val_metric="val_loss",
+    test_metric="test_mae",
+    batch_size=128,
 
     log_interval=10,
     # log_val_interval=1,
