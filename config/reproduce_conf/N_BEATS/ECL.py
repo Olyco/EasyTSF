@@ -5,7 +5,7 @@ exp_conf = dict(
     dataset_name='ECL',
     var_cut=10,
 
-    # norm_variable=False,
+    norm_variable=True,
 
     hist_len=24,
     pred_len=12,

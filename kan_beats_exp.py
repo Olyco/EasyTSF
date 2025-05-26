@@ -6,6 +6,7 @@ from datetime import datetime
 import pytz
 import matplotlib.pyplot as plt
 import pandas as pd
+import time
 
 
 import lightning.pytorch as L
@@ -15,6 +16,7 @@ from lightning.pytorch.utilities.model_summary import ModelSummary
 from ray.tune.integration.pytorch_lightning import TuneReportCheckpointCallback
 from pytorch_forecasting.data import NaNLabelEncoder
 from pytorch_forecasting import TimeSeriesDataSet, Baseline, NBeats, GroupNormalizer, MultiNormalizer, EncoderNormalizer
+from sklearn.preprocessing import MinMaxScaler
 
 from easytsf.runner.data_runner import DataInterface
 from easytsf.runner.exp_runner import LTSFRunner
@@ -30,9 +32,15 @@ def prepare_data(config):
     data = data.rename(columns={'date': 'timestamp'})
     variable = data.iloc[:, 1:config['var_cut'] + 1].to_numpy()
 
+    scaler = MinMaxScaler()
+    if config['norm_variable']:
+        scaler.fit(variable[:config['data_split'][0]])
+
+    scaled = scaler.transform(variable)
+
     concatenated_df = pd.DataFrame()
-    for i in range(variable.shape[1]):
-        ts = pd.DataFrame(data={'variable': variable.T[i], 'id': [i for var in range(variable.shape[0])]})
+    for i in range(scaled.shape[1]):
+        ts = pd.DataFrame(data={'variable': scaled.T[i], 'id': [i for var in range(scaled.shape[0])]})
         concatenated_df = pd.concat([concatenated_df, ts])
     concatenated_df = concatenated_df.reset_index()
 
@@ -155,11 +163,15 @@ def train_func(hyper_conf, conf):
 
     print(ModelSummary(model, max_depth=-1))
 
+    start = time.time()
     trainer.fit(
         model=model, 
         train_dataloaders=train_dataloader,
         val_dataloaders=val_dataloader
         )
+    end = time.time()
+    train_time = end-start
+    print(f"Training time: {train_time:.03f} s ({(train_time / 60):.03f} min, {(train_time / 3600):.03f} h)")
     # if conf["model_name"] == "KAN":
     #     model.model.saveckpt() # в файлы колаба
 
