@@ -9,7 +9,7 @@ exp_conf = dict(
     norm_variable=True,
     batch_sampler='synchronized',
 
-    hist_len=24,
+    hist_len=48,
     pred_len=12,
 
     max_epochs=3,
@@ -20,7 +20,7 @@ exp_conf = dict(
     stack_types=['trend','seasonality'],
     num_blocks=[2, 2],
     num_block_layers=[4, 4],
-    widths=[64, 64],
+    widths=[16, 16],
     sharing=False,
     expansion_coefficient_lengths=[3, 12],
     backcast_loss_ratio=0.1,#
@@ -28,14 +28,14 @@ exp_conf = dict(
 
     val_metric="val_loss",
     test_metric="test_mae",
-    batch_size=128,
+    batch_size=64,
 
     log_interval=10,
     # log_val_interval=1,
     log_gradient_flow=False,
     weight_decay=1e-2,
 
-    learning_rate=0.001,
-    lr=0.001,
+    learning_rate=0.0001,
+    lr=0.0001,
     reduce_on_plateau_patience=10,
 )

@@ -19,17 +19,17 @@ exp_conf = dict(
     norm_variable=True,
     batch_sampler='synchronized',
 
-    hist_len=24,
+    hist_len=48,
     pred_len=12,
 
     max_epochs=3,
 
-    stack_types=['generic'],
-    num_blocks=[2],
-    num_block_layers=[2],
-    widths=[64],
+    stack_types=['trend','seasonality'],
+    num_blocks=[2, 2],
+    num_block_layers=[4, 4],
+    widths=[16, 16],
     sharing=False,
-    expansion_coefficient_lengths=[32],
+    expansion_coefficient_lengths=[3, 12],
     backcast_loss_ratio=0.1,
     loss=MAE(),
     logging_metrics=nn.ModuleList([SMAPE(), MAE(), RMSE(), MAPE(), MASE(), customR2Score()]),
@@ -43,7 +43,7 @@ exp_conf = dict(
     log_gradient_flow=False,
     weight_decay=1e-2,
 
-    lr=0.001,
-    learning_rate=0.001,
+    lr=0.0001,
+    learning_rate=0.0001,
     reduce_on_plateau_patience=10,
 )

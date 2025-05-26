@@ -17,6 +17,7 @@ from ray.tune.integration.pytorch_lightning import TuneReportCheckpointCallback
 from pytorch_forecasting.data import NaNLabelEncoder
 from pytorch_forecasting import TimeSeriesDataSet, Baseline, NBeats, GroupNormalizer, MultiNormalizer, EncoderNormalizer
 from sklearn.preprocessing import MinMaxScaler
+from lightning.pytorch.tuner import Tuner
 
 from easytsf.runner.data_runner import DataInterface
 from easytsf.runner.exp_runner import LTSFRunner
@@ -171,10 +172,20 @@ def train_func(hyper_conf, conf):
             weight_decay=conf['weight_decay'],
             learning_rate=conf['learning_rate'],
             reduce_on_plateau_patience=conf['reduce_on_plateau_patience'],
+            logging_metrics=conf['logging_metrics'],
         )
-    print(model.hparams)
 
     print(ModelSummary(model, max_depth=-1))
+
+    #
+    res = Tuner(trainer).lr_find(model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader, min_lr=1e-5)
+    print(f"suggested learning rate: {res.suggestion()}")
+    fig = res.plot(show=True, suggest=True)
+    fig.savefig(f"{conf['model_name']}_{conf['exp_time']}_lr_{res.suggestion():.06f}.png")
+    model.hparams.learning_rate = res.suggestion()
+    #
+
+    print(model.hparams)
 
     start = time.time()
     trainer.fit(
