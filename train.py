@@ -4,13 +4,16 @@ import importlib.util
 import os
 from datetime import datetime
 import pytz
+import time
 import matplotlib.pyplot as plt
 
 
 import lightning.pytorch as L
+from lightning.pytorch.utilities.model_summary import ModelSummary
 from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint, EarlyStopping
 from lightning.pytorch.loggers import CSVLogger, WandbLogger
 from ray.tune.integration.pytorch_lightning import TuneReportCheckpointCallback
+from lightning.pytorch.tuner import Tuner
 
 from easytsf.runner.data_runner import DataInterface
 from easytsf.runner.exp_runner import LTSFRunner
@@ -102,8 +105,25 @@ def train_func(hyper_conf, conf):
 
     data_module = DataInterface(**conf)
     model = LTSFRunner(**conf)
+    print(ModelSummary(model, max_depth=-1))
 
+    #
+    res = Tuner(trainer).lr_find(model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader, min_lr=1e-10)
+    print(f"suggested learning rate: {res.suggestion()}")
+    fig = res.plot(show=True, suggest=True)
+    fig.savefig(f"{conf['model_name']}_{conf['exp_time']}_lr_{res.suggestion():.010f}.png")
+    model.hparams.learning_rate = res.suggestion()
+    #
+
+    print(model.hparams)
+
+
+    start = time.time()
     trainer.fit(model=model, datamodule=data_module)
+    end = time.time()
+    train_time = end-start
+    print(f"Training time: {train_time:.03f} s ({(train_time / 60):.03f} min, {(train_time / 3600):.03f} h)")
+
     if conf["model_name"] == "KAN":
         model.model.saveckpt() # в файлы колаба
 

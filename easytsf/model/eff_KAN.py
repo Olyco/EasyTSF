@@ -151,9 +151,13 @@ class KANLinear(torch.nn.Module):
         )
 
     def forward(self, x: torch.Tensor):
+        reshape = len(x.shape) == 3
+        if reshape:
+          B, L, N = x.shape
+          x = x.transpose(1, 2)
         assert x.size(-1) == self.in_features
         original_shape = x.shape
-        x = x.reshape(-1, self.in_features)
+        x = x.reshape(-1, self.in_features) # x = .reshape(B * N, L)
 
         base_output = F.linear(self.base_activation(x), self.base_weight)
         spline_output = F.linear(
@@ -162,8 +166,26 @@ class KANLinear(torch.nn.Module):
         )
         output = base_output + spline_output
         
-        output = output.reshape(*original_shape[:-1], self.out_features)
+        if reshape:
+          output = output.reshape(B, N, -1).permute(0, 2, 1)
+        else:
+          output = output.reshape(*original_shape[:-1], self.out_features)
         return output
+
+    # def forward(self, x: torch.Tensor):
+    #     assert x.size(-1) == self.in_features
+    #     original_shape = x.shape
+    #     x = x.reshape(-1, self.in_features)
+
+    #     base_output = F.linear(self.base_activation(x), self.base_weight)
+    #     spline_output = F.linear(
+    #         self.b_splines(x).view(x.size(0), -1),
+    #         self.scaled_spline_weight.view(self.out_features, -1),
+    #     )
+    #     output = base_output + spline_output
+        
+    #     output = output.reshape(*original_shape[:-1], self.out_features)
+    #     return output
 
     @torch.no_grad()
     def update_grid(self, x: torch.Tensor, margin=0.01):

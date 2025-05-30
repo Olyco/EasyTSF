@@ -5,11 +5,11 @@ exp_conf = dict(
     hist_len=24,
     pred_len=6,
 
-    max_epochs=5,
+    max_epochs=50,
 
-    layers_hidden=[24 * 321, 5, 6 * 321],
-    grid=3,#
-    k=3,#
+    layers_hidden=[24, 5, 6],
+    grid_size=3,#
+    spline_order=3,#
 
-    lr=0.001,
+    lr=0.0001,
 )

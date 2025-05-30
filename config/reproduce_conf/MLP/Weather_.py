@@ -1,5 +1,5 @@
 exp_conf = dict(
-    model_name="eff_KAN",
+    model_name="MLP_",
     dataset_name='Weather',
 
     hist_len=24,
@@ -7,9 +7,7 @@ exp_conf = dict(
 
     max_epochs=50,
 
-    layers_hidden=[24, 2, 6],
-    grid_size=3,
-    spline_order=3,
-
+    width=[24, 5, 6],
+    
     lr=0.0001,
 )
