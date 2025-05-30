@@ -71,7 +71,7 @@ class DataInterface(pl.LightningDataModule):
         elif self.file_format == "csv":
             data = pd.read_csv(self.data_path)
             data = data.rename(columns={'date': 'timestamp'})
-            variable = data.iloc[:, 1:config['var_cut'] + 1].to_numpy()
+            variable = data.iloc[:, 1:self.config['var_cut'] + 1].to_numpy()
 
         timestamp = pd.DatetimeIndex(data['timestamp'])
 

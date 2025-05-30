@@ -29,7 +29,7 @@ class LTSFRunner(L.LightningModule):
 
     def forward(self, batch, batch_idx):
         var_x, var_y = [_.float() for _ in batch]
-        if self.hparams.model_name == "KAN" or self.hparams.model_name == "MLP" or self.hparams.model_name == "eff_KAN":
+        if self.hparams.model_name == "KAN" or self.hparams.model_name == "MLP":# or self.hparams.model_name == "eff_KAN":
           label = var_y[:, -self.hparams.pred_len:]
           prediction = self.model(var_x)[:, -self.hparams.pred_len:]
         else:
@@ -43,6 +43,7 @@ class LTSFRunner(L.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
+        # log_history()
         loss = self.loss_function(*self.forward(batch, batch_idx))
         self.log('val/loss', loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
         return loss
