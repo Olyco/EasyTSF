@@ -107,13 +107,13 @@ def train_func(hyper_conf, conf):
     model = LTSFRunner(**conf)
     print(ModelSummary(model, max_depth=-1))
 
-    #
-    res = Tuner(trainer).lr_find(model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader, min_lr=1e-10)
-    print(f"suggested learning rate: {res.suggestion()}")
-    fig = res.plot(show=True, suggest=True)
-    fig.savefig(f"{conf['model_name']}_{conf['exp_time']}_lr_{res.suggestion():.010f}.png")
-    model.hparams.learning_rate = res.suggestion()
-    #
+    # #
+    # res = Tuner(trainer).lr_find(model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader, min_lr=1e-10)
+    # print(f"suggested learning rate: {res.suggestion()}")
+    # fig = res.plot(show=True, suggest=True)
+    # fig.savefig(f"{conf['model_name']}_{conf['exp_time']}_lr_{res.suggestion():.010f}.png")
+    # model.hparams.learning_rate = res.suggestion()
+    # #
 
     print(model.hparams)
 

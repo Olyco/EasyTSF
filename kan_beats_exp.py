@@ -176,7 +176,7 @@ def train_func(hyper_conf, conf):
 
             logging_metrics=conf['logging_metrics'],
             optimizer=conf['optimizer'],
-            optimizer_params=optimizer_params,
+            # optimizer_params=optimizer_params,
             # lr_scheduler=lr_scheduler,
             # lr_scheduler_params: Optional[dict] = None,
 
@@ -202,7 +202,7 @@ def train_func(hyper_conf, conf):
 
             logging_metrics=conf['logging_metrics'],
             optimizer=conf['optimizer'],
-            optimizer_params=optimizer_params,
+            # optimizer_params=optimizer_params,
             # lr_scheduler=lr_scheduler,
             # lr_scheduler_params: Optional[dict] = None,
 

@@ -16,7 +16,7 @@ task_conf = dict(
     test_metric="test/mae",
     es_patience=10,
     lrs_factor=0.5,
-    lrs_patience=3,
+    lrs_patience=5,
 
     norm_variable = True,
     norm_time_feature=False,
