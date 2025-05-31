@@ -155,10 +155,10 @@ def train_func(hyper_conf, conf):
 
     train_dataloader, val_dataloader, test_dataloader, train_data = prepare_data(conf)
 
-    optimizer_params = dict(
-        lr=conf['lr'],
-        weight_decay=conf['optimizer_weight_decay'],
-    )
+    # optimizer_params = dict(
+    #     lr=conf['learning_rate'],
+    #     weight_decay=conf['optimizer_weight_decay'],
+    # )
 
     if conf['model_name'] == "KAN_BEATS":
         model = KANBeats.from_dataset(
@@ -184,7 +184,9 @@ def train_func(hyper_conf, conf):
             log_gradient_flow=conf['log_gradient_flow'],
             weight_decay=conf['weight_decay'],
             learning_rate=conf['learning_rate'],
-            reduce_on_plateau_patience=conf['reduce_on_plateau_patience'],
+            reduce_on_plateau_patience=2,
+            reduce_on_plateau_min_lr=conf['reduce_on_plateau_min_lr'],
+            reduce_on_plateau_reduction=10.0,
             )
     elif conf['model_name'] == "N_BEATS":
         model = NBeats.from_dataset(
@@ -208,20 +210,31 @@ def train_func(hyper_conf, conf):
             log_gradient_flow=conf['log_gradient_flow'],
             weight_decay=conf['weight_decay'],
             learning_rate=conf['learning_rate'],
-            reduce_on_plateau_patience=conf['reduce_on_plateau_patience'],
+            reduce_on_plateau_patience=2,
+            reduce_on_plateau_min_lr=conf['reduce_on_plateau_min_lr'],
+            reduce_on_plateau_reduction=10.0,
         )
 
     print(ModelSummary(model, max_depth=-1))
 
     #
-    res = Tuner(trainer).lr_find(model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader, min_lr=1e-10)
+    res = Tuner(trainer).lr_find(model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader, min_lr=1e-5)
     print(f"suggested learning rate: {res.suggestion()}")
     fig = res.plot(show=True, suggest=True)
     fig.savefig(f"{conf['model_name']}_{conf['exp_time']}_lr_{res.suggestion():.010f}.png")
     model.hparams.learning_rate = res.suggestion()
-    #
+    
+    #change lr everywhere
+    for g in trainer.optimizers[0].param_groups:
+      g['lr'] = model.hparams.learning_rate
+    lr_state = trainer.lr_scheduler_configs[0].scheduler.state_dict()
+    lr_state['_last_lr'] = model.hparams.learning_rate
+    trainer.lr_scheduler_configs[0].scheduler.load_state_dict(lr_state)
 
     print(model.hparams)
+    print(trainer.optimizers[0])
+    print(trainer.lr_scheduler_configs[0].scheduler.state_dict())
+    #
 
     start = time.time()
     trainer.fit(

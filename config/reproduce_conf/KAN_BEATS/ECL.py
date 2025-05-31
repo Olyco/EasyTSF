@@ -12,16 +12,16 @@ class customR2Score(MultiHorizonMetric):
         
 exp_conf = dict(
     model_name="KAN_BEATS",
-    dataset_name='ECL',
-    var_cut=10,
+    dataset_name='ECL1_short',
+    var_cut=1,
 
     norm_variable=True,
     batch_sampler='synchronized',
 
-    hist_len=24,
-    pred_len=12,
+    hist_len=10,
+    pred_len=5,
 
-    max_epochs=4,
+    max_epochs=5,
 
     grid_size=3,
     spline_order=3,
@@ -47,6 +47,6 @@ exp_conf = dict(
 
     learning_rate=0.001,
     lr=0.001,
-    reduce_on_plateau_patience=3,#
+    reduce_on_plateau_patience=1,#
     reduce_on_plateau_min_lr=1e-12,
 )
