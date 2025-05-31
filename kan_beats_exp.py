@@ -8,8 +8,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import time
 
-
+import torch
 import lightning.pytorch as L
+import torch.optim.lr_scheduler as lrs
 from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint, EarlyStopping
 from lightning.pytorch.loggers import CSVLogger, WandbLogger
 from lightning.pytorch.utilities.model_summary import ModelSummary
@@ -102,8 +103,6 @@ def train_func(hyper_conf, conf):
         run_logger = CSVLogger(save_dir=save_dir, name=conf["exp_time"], version='seed_{}'.format(conf["seed"]))
     conf["exp_dir"] = os.path.join(save_dir, conf["exp_time"], 'seed_{}'.format(conf["seed"]))
 
-    # if conf["model_name"] == "KAN":
-    #     conf["ckpt_path"] = os.path.join(conf["exp_dir"], "model")
 
     callbacks = [
         ModelCheckpoint(
@@ -135,6 +134,25 @@ def train_func(hyper_conf, conf):
         deterministic=True,
     )
 
+    if conf['optimizer'] == 'Adam':
+            optimizer = torch.optim.Adam(lr=conf['lr'], weight_decay=conf['optimizer_weight_decay'])
+        elif conf['optimizer'] == 'AdamW':
+            optimizer = torch.optim.AdamW(lr=conf['lr'], betas=(0.9, 0.95), weight_decay=1e-5)
+        else:
+            raise ValueError('Invalid optimizer type!')
+
+    if conf['lr_scheduler'] == 'StepLR':
+            lr_scheduler = {
+                "scheduler": lrs.StepLR(
+                    optimizer, step_size=conf['lr_step_size'], gamma=conf['lr_gamma'])
+            }
+        elif conf['lr_scheduler'] == 'ReduceLROnPlateau':
+            lr_scheduler = {
+                "scheduler": lrs.ReduceLROnPlateau(
+                    optimizer, mode='min', factor=conf['lrs_factor'], patience=conf['lrs_patience']),
+                "monitor": conf['val_metric']
+            }
+
     train_dataloader, val_dataloader, test_dataloader, train_data = prepare_data(conf)
 
     if conf['model_name'] == "KAN_BEATS":
@@ -150,7 +168,14 @@ def train_func(hyper_conf, conf):
             expansion_coefficient_lengths=conf['expansion_coefficient_lengths'],
             backcast_loss_ratio=conf['backcast_loss_ratio'],
             loss=conf['loss'],
-            log_interval=conf['log_interval'],
+
+            logging_metrics=conf['logging_metrics'],
+            optimizer=optimizer,
+            # optimizer_params: Optional[dict] = None,
+            lr_scheduler=lr_scheduler,
+            # lr_scheduler_params: Optional[dict] = None,
+
+            log_interval=3,
             log_gradient_flow=conf['log_gradient_flow'],
             weight_decay=conf['weight_decay'],
             learning_rate=conf['learning_rate'],
@@ -167,12 +192,18 @@ def train_func(hyper_conf, conf):
             expansion_coefficient_lengths=conf['expansion_coefficient_lengths'],
             backcast_loss_ratio=conf['backcast_loss_ratio'],
             loss=conf['loss'],
-            log_interval=conf['log_interval'],
+
+            logging_metrics=conf['logging_metrics'],
+            optimizer=optimizer,
+            # optimizer_params: Optional[dict] = None,
+            lr_scheduler=lr_scheduler,
+            # lr_scheduler_params: Optional[dict] = None,
+
+            log_interval=3,
             log_gradient_flow=conf['log_gradient_flow'],
             weight_decay=conf['weight_decay'],
             learning_rate=conf['learning_rate'],
             reduce_on_plateau_patience=conf['reduce_on_plateau_patience'],
-            logging_metrics=conf['logging_metrics'],
         )
 
     print(ModelSummary(model, max_depth=-1))

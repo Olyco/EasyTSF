@@ -20,6 +20,7 @@ from pytorch_forecasting.models.nbeats.sub_modules import (
 from pytorch_forecasting.utils._dependencies import _check_matplotlib
 
 from easytsf.model.eff_KAN import eff_KAN
+from kan import KAN
 
 
 """
