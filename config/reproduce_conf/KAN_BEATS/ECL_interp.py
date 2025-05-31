@@ -1,4 +1,4 @@
-from pytorch_forecasting.metrics import MAE, MAPE, MASE, RMSE, SMAPE
+from pytorch_forecasting.metrics import MAE, MAPE, MASE, RMSE, SMAPE, MultiHorizonMetric
 from torch import nn
 from torcheval.metrics import R2Score
 
@@ -48,5 +48,6 @@ exp_conf = dict(
 
     learning_rate=1e-8,
     lr=1e-8,
-    reduce_on_plateau_patience=10,
+    reduce_on_plateau_patience=3,#
+    reduce_on_plateau_min_lr=1e-12,
 )

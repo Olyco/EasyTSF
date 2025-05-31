@@ -15,7 +15,7 @@ task_conf = dict(
     val_metric="val/loss",
     test_metric="test/mae",
     es_patience=10,
-    lrs_factor=0.1,
+    lrs_factor=0.5,
     lrs_patience=3,
 
     norm_variable = True,

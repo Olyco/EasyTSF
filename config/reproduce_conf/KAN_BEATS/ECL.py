@@ -1,4 +1,4 @@
-from pytorch_forecasting.metrics import MAE, MAPE, MASE, RMSE, SMAPE
+from pytorch_forecasting.metrics import MAE, MAPE, MASE, RMSE, SMAPE, MultiHorizonMetric
 from torch import nn
 from torcheval.metrics import R2Score
 
@@ -21,7 +21,7 @@ exp_conf = dict(
     hist_len=24,
     pred_len=12,
 
-    max_epochs=3,
+    max_epochs=4,
 
     grid_size=3,
     spline_order=3,
@@ -29,9 +29,9 @@ exp_conf = dict(
     stack_types=['generic'],
     num_blocks=[2],
     num_block_layers=[2],
-    widths=[64],
+    widths=[5],
     sharing=False,
-    expansion_coefficient_lengths=[32],
+    expansion_coefficient_lengths=[10],
     backcast_loss_ratio=0.1,
     loss=MAE(),
     logging_metrics=nn.ModuleList([SMAPE(), MAE(), RMSE(), MAPE(), MASE(), customR2Score()]),
@@ -47,5 +47,6 @@ exp_conf = dict(
 
     learning_rate=0.001,
     lr=0.001,
-    reduce_on_plateau_patience=10,
+    reduce_on_plateau_patience=3,#
+    reduce_on_plateau_min_lr=1e-12,
 )

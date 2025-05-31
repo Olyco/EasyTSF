@@ -46,5 +46,6 @@ exp_conf = dict(
 
     lr=1e-8,
     learning_rate=1e-8,
-    reduce_on_plateau_patience=10,
+    reduce_on_plateau_patience=3,#
+    reduce_on_plateau_min_lr=1e-12,
 )

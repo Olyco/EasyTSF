@@ -134,26 +134,31 @@ def train_func(hyper_conf, conf):
         deterministic=True,
     )
 
-    if conf['optimizer'] == 'Adam':
-            optimizer = torch.optim.Adam(lr=conf['lr'], weight_decay=conf['optimizer_weight_decay'])
-        elif conf['optimizer'] == 'AdamW':
-            optimizer = torch.optim.AdamW(lr=conf['lr'], betas=(0.9, 0.95), weight_decay=1e-5)
-        else:
-            raise ValueError('Invalid optimizer type!')
+    # if conf['optimizer'] == 'Adam':
+    #         optimizer = torch.optim.Adam(lr=conf['lr'], weight_decay=conf['optimizer_weight_decay'])
+    # elif conf['optimizer'] == 'AdamW':
+    #     optimizer = torch.optim.AdamW(lr=conf['lr'], betas=(0.9, 0.95), weight_decay=1e-5)
+    # else:
+    #     raise ValueError('Invalid optimizer type!')
 
-    if conf['lr_scheduler'] == 'StepLR':
-            lr_scheduler = {
-                "scheduler": lrs.StepLR(
-                    optimizer, step_size=conf['lr_step_size'], gamma=conf['lr_gamma'])
-            }
-        elif conf['lr_scheduler'] == 'ReduceLROnPlateau':
-            lr_scheduler = {
-                "scheduler": lrs.ReduceLROnPlateau(
-                    optimizer, mode='min', factor=conf['lrs_factor'], patience=conf['lrs_patience']),
-                "monitor": conf['val_metric']
-            }
+    # if conf['lr_scheduler'] == 'StepLR':
+    #         lr_scheduler = {
+    #             "scheduler": lrs.StepLR(
+    #                 optimizer, step_size=conf['lr_step_size'], gamma=conf['lr_gamma'])
+    #         }
+    # elif conf['lr_scheduler'] == 'ReduceLROnPlateau':
+    #     lr_scheduler = {
+    #         "scheduler": lrs.ReduceLROnPlateau(
+    #             optimizer, mode='min', factor=conf['lrs_factor'], patience=conf['lrs_patience']),
+    #         "monitor": conf['val_metric']
+    #     }
 
     train_dataloader, val_dataloader, test_dataloader, train_data = prepare_data(conf)
+
+    optimizer_params = dict(
+        lr=conf['lr'],
+        weight_decay=conf['optimizer_weight_decay'],
+    )
 
     if conf['model_name'] == "KAN_BEATS":
         model = KANBeats.from_dataset(
@@ -170,9 +175,9 @@ def train_func(hyper_conf, conf):
             loss=conf['loss'],
 
             logging_metrics=conf['logging_metrics'],
-            optimizer=optimizer,
-            # optimizer_params: Optional[dict] = None,
-            lr_scheduler=lr_scheduler,
+            optimizer=conf['optimizer'],
+            optimizer_params=optimizer_params,
+            # lr_scheduler=lr_scheduler,
             # lr_scheduler_params: Optional[dict] = None,
 
             log_interval=3,
@@ -194,9 +199,9 @@ def train_func(hyper_conf, conf):
             loss=conf['loss'],
 
             logging_metrics=conf['logging_metrics'],
-            optimizer=optimizer,
-            # optimizer_params: Optional[dict] = None,
-            lr_scheduler=lr_scheduler,
+            optimizer=conf['optimizer'],
+            optimizer_params=optimizer_params,
+            # lr_scheduler=lr_scheduler,
             # lr_scheduler_params: Optional[dict] = None,
 
             log_interval=3,
