@@ -7,6 +7,7 @@ import pytz
 import matplotlib.pyplot as plt
 import pandas as pd
 import time
+import sys
 
 import torch
 import lightning.pytorch as L
@@ -14,18 +15,36 @@ import torch.optim.lr_scheduler as lrs
 from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint, EarlyStopping
 from lightning.pytorch.loggers import CSVLogger, WandbLogger
 from lightning.pytorch.utilities.model_summary import ModelSummary
-from ray.tune.integration.pytorch_lightning import TuneReportCheckpointCallback
 from pytorch_forecasting.data import NaNLabelEncoder
 from pytorch_forecasting import TimeSeriesDataSet, Baseline, NBeats, GroupNormalizer, MultiNormalizer, EncoderNormalizer
 from sklearn.preprocessing import MinMaxScaler
 from lightning.pytorch.tuner import Tuner
 
-from easytsf.runner.data_runner import DataInterface
-from easytsf.runner.exp_runner import LTSFRunner
-from easytsf.util import load_module_from_path
-
 from train import load_config
 from easytsf.model.KAN_BEATS import KANBeats
+
+
+def load_module_from_path(module_name, exp_conf_path):
+    spec = importlib.util.spec_from_file_location(module_name, exp_conf_path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_config(exp_conf_path):
+    exp_conf = load_module_from_path("exp_conf", exp_conf_path).exp_conf
+
+    task_conf_module = importlib.import_module('config.base_conf.task')
+    task_conf = task_conf_module.task_conf
+
+    data_conf_module = importlib.import_module('config.base_conf.datasets')
+    data_conf = eval('data_conf_module.{}_conf'.format(exp_conf['dataset_name']))
+
+    fused_conf = {**task_conf, **data_conf}
+    fused_conf.update(exp_conf)
+
+    return fused_conf
 
 
 def prepare_data(config):
@@ -99,12 +118,8 @@ def train_func(hyper_conf, conf):
     L.seed_everything(conf["seed"])
     save_dir = os.path.join(conf["save_root"], '{}_{}'.format(conf["model_name"], conf["dataset_name"]))
     
-    if "use_wandb" in conf and conf["use_wandb"]:
-        run_logger = WandbLogger(save_dir=save_dir, name=conf["exp_time"], version='seed_{}'.format(conf["seed"]))
-    else:
-        run_logger = CSVLogger(save_dir=save_dir, name=conf["exp_time"], version='seed_{}'.format(conf["seed"]))
-    conf["exp_dir"] = os.path.join(save_dir, conf["exp_time"], 'seed_{}'.format(conf["seed"]))
-
+    run_logger = CSVLogger(save_dir=save_dir, name=conf["exp_time"], version='seed_{}'.format(conf["seed"]))
+    conf["exp_dir"] = os.path.join(save_dir, conf["exp_time"])
 
     callbacks = [
         ModelCheckpoint(
@@ -120,8 +135,6 @@ def train_func(hyper_conf, conf):
             patience=conf["es_patience"],
         ),
         LearningRateMonitor(logging_interval="epoch"),
-        TuneReportCheckpointCallback(
-            {conf["val_metric"]: conf["val_metric"]}, save_checkpoints=False, on="validation_end")
     ]
 
     trainer = L.Trainer(
@@ -151,10 +164,8 @@ def train_func(hyper_conf, conf):
             expansion_coefficient_lengths=conf['expansion_coefficient_lengths'],
             backcast_loss_ratio=conf['backcast_loss_ratio'],
             loss=conf['loss'],
-
             logging_metrics=conf['logging_metrics'],
             optimizer=conf['optimizer'],
-
             log_interval=3,
             log_gradient_flow=conf['log_gradient_flow'],
             weight_decay=conf['weight_decay'],
@@ -177,7 +188,6 @@ def train_func(hyper_conf, conf):
 
             logging_metrics=conf['logging_metrics'],
             optimizer=conf['optimizer'],
-
             log_interval=3,
             log_gradient_flow=conf['log_gradient_flow'],
             weight_decay=conf['weight_decay'],
@@ -187,12 +197,12 @@ def train_func(hyper_conf, conf):
             reduce_on_plateau_reduction=10.0,
         )
 
-    print(ModelSummary(model, max_depth=-1))
+    # print(ModelSummary(model, max_depth=-1))
 
     #
     res = Tuner(trainer).lr_find(model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader, min_lr=1e-3)
     print(f"suggested learning rate: {res.suggestion()}")
-    fig = res.plot(show=True, suggest=True)
+    fig = res.plot(show=False, suggest=True)
     fig.savefig(f"{conf['model_name']}_{conf['exp_time']}_lr_{res.suggestion():.010f}.png")
     model.hparams.learning_rate = res.suggestion()
     
@@ -215,7 +225,7 @@ def train_func(hyper_conf, conf):
         val_dataloaders=val_dataloader
         )
     end = time.time()
-    train_time = end-start
+    train_time = end - start
     print(f"Training time: {train_time:.03f} s ({(train_time / 60):.03f} min, {(train_time / 3600):.03f} h)")
 
     trainer.test(model, dataloaders=test_dataloader, ckpt_path='best')
@@ -224,10 +234,9 @@ def train_func(hyper_conf, conf):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--config", type=str) # experiment config
-    parser.add_argument("-d", "--data_root", default="drive/MyDrive/VKR/Data/Time series", type=str, help="data root") # "drive/MyDrive/Оля/"
-    parser.add_argument("-s", "--save_root", default="drive/MyDrive/VKR/Results/save", help="save root") # "drive/MyDrive/Оля/save"
+    parser.add_argument("-d", "--data_root", default="", type=str, help="data root") # папка с данными
+    parser.add_argument("-s", "--save_root", default="save", help="save root") # папка сохранения
     parser.add_argument("--devices", default='auto', type=str, help="device' id to use")
-    parser.add_argument("--use_wandb", default=0, type=int, help="use wandb")
     parser.add_argument("--seed", type=int, default=1, help="seed")
     args = parser.parse_args()
 
@@ -236,7 +245,6 @@ if __name__ == '__main__':
         "data_root": args.data_root,
         "save_root": args.save_root,
         "devices": args.devices,
-        "use_wandb": args.use_wandb,
     }
     init_exp_conf = load_config(args.config)
     train_func(training_conf, init_exp_conf)
