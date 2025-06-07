@@ -66,6 +66,9 @@ def prepare_data(config):
         max_encoder_length=config['hist_len'],
         max_prediction_length=config['pred_len'],
         time_varying_unknown_reals=["variable"],
+
+        # target_normalizer=,
+        # scalers=,
     )
     val_data = TimeSeriesDataSet.from_dataset(train_data, val_cut)
     test_data = TimeSeriesDataSet.from_dataset(train_data, test_cut)
@@ -76,6 +79,8 @@ def prepare_data(config):
         num_workers=config['num_workers'], 
         batch_sampler=config['batch_sampler'],
     )
+    print(next(iter(train_dataloader)))
+    
     val_dataloader = val_data.to_dataloader(
         train=False, 
         batch_size=config['batch_size'], 

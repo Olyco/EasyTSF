@@ -1,6 +1,6 @@
 task_conf = dict(
-    hist_len=96,
-    pred_len=96,
+    hist_len=48,
+    pred_len=12,
 
     batch_size=64,
     max_epochs=10,
