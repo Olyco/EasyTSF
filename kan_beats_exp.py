@@ -6,6 +6,7 @@ from datetime import datetime
 import pytz
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 import time
 
 import torch
@@ -67,7 +68,8 @@ def prepare_data(config):
         max_prediction_length=config['pred_len'],
         time_varying_unknown_reals=["variable"],
 
-        target_normalizer=GroupNormalizer(),
+        # target_normalizer=GroupNormalizer(),
+        target_normalizer=None,
         scalers=None,
     )
     print(train_data.get_parameters())
@@ -78,15 +80,15 @@ def prepare_data(config):
         train=True, 
         batch_size=config['batch_size'], 
         num_workers=config['num_workers'], 
-        batch_sampler=config['batch_sampler'],
+        # batch_sampler=config['batch_sampler'],
     )
     x, y = next(iter(train_dataloader))
-    print(x)
+    # print(x)
     for key, value in x.items():
         print(f"\t{key} = {value.size()}")
 
-    x, y = next(iter(train_dataloader))
-    print(x)
+    # x, y = next(iter(train_dataloader))
+    # print(x)
 
     val_dataloader = val_data.to_dataloader(
         train=False, 
@@ -196,7 +198,7 @@ def train_func(hyper_conf, conf):
             learning_rate=conf['learning_rate'],
             reduce_on_plateau_patience=2,
             reduce_on_plateau_min_lr=conf['reduce_on_plateau_min_lr'],
-            reduce_on_plateau_reduction=10.0,
+            reduce_on_plateau_reduction=2.0,
         )
 
     print(ModelSummary(model, max_depth=-1))
@@ -204,8 +206,8 @@ def train_func(hyper_conf, conf):
     #
     res = Tuner(trainer).lr_find(model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader, min_lr=1e-3)
     print(f"suggested learning rate: {res.suggestion()}")
-    fig = res.plot(show=True, suggest=True)
-    fig.savefig(f"{conf['model_name']}_{conf['exp_time']}_lr_{res.suggestion():.010f}.png")
+    fig = res.plot(show=False, suggest=True)
+    fig.savefig(f"{conf['exp_dir']}/lr_{res.suggestion():.010f}.png")
     model.hparams.learning_rate = res.suggestion()
     
     #change lr everywhere
@@ -231,6 +233,91 @@ def train_func(hyper_conf, conf):
     print(f"Training time: {train_time:.03f} s ({(train_time / 60):.03f} min, {(train_time / 3600):.03f} h)")
 
     trainer.test(model, dataloaders=test_dataloader, ckpt_path='best')
+
+    # Visualize Predictions
+
+    # Get predictions from test dataset
+    preds = model.predict(test_dataloader)
+
+    # Aggregate inputs, ground truth and classes into tensor alligned with predictions
+    input_list, true_list, class_list = [], [], []
+    for x, y in test_dataloader: 
+        input_list.append(x["encoder_target"])
+        true_list.append(y[0])
+        class_list.append(x["groups"])
+
+    inputs = torch.cat(input_list)
+    trues = torch.cat(true_list)
+    classes = torch.cat(class_list)
+
+    print(inputs.shape, preds.shape, trues.shape, classes.shape)
+
+    # Select indices of samples to visualize
+    n_samples = 10
+    ss_indices = np.random.choice(range(preds.shape[0]), n_samples, replace=False)
+    ss_pred = preds[ss_indices]
+    ss_true = trues[ss_indices]
+    ss_input = inputs[ss_indices]
+    ss_class = classes[ss_indices]
+
+    print(ss_input.shape, ss_pred.shape, ss_true.shape, ss_class.shape)
+
+    # Loop through samples and plot input, ground truth and prediction
+    f, axarr = plt.subplots(n_samples, 1, figsize=(20, 80))
+    for i in range(n_samples):
+        series_preds = ss_pred[i, :].squeeze()
+        series_trues = ss_true[i, :].squeeze()
+        series_inputs = ss_input[i, :].squeeze()
+
+        feat_name = str(ss_class[i].item())
+        
+        input_len = series_inputs.shape[0]
+        pred_gt_len = series_preds.shape[0]
+        input_x = np.array([i for i in range(input_len)])
+        x = np.array([i for i in range(input_len, input_len+pred_gt_len)])
+        axarr[i].plot(x, series_preds, c="green", label="predictions")
+        axarr[i].plot(x, series_trues, c="red", label="ground truth")
+        axarr[i].plot(input_x, series_inputs, c="blue", label="input")
+        axarr[i].legend()
+        axarr[i].set_title(feat_name)
+    f.savefig(f"{conf['exp_dir']}/preds.png")
+
+    # loss
+    loss_f, ax = plt.subplots(figsize=(10, 10))
+
+    df = pd.read_csv(f"{conf['exp_dir']}/metrics.csv")
+    loss_epoch = df[df['train_loss_epoch'].notnull()]['train_loss_epoch']
+    val_loss_epoch = df[df['val_loss'].notnull()]['val_loss']
+
+
+    epochs = np.arange(0,loss_epoch.shape[0])
+    ax.plot(epochs, val_loss_epoch, label='validation')
+    ax.plot(epochs, loss_epoch, label='train')
+    ax.set_title('model loss')
+    # plt.xscale('log')
+    # plt.yscale('log')
+    # plt.ylim(0, 0.013)
+    ax.set_ylabel('loss')
+    ax.set_xlabel('epoch')
+    ax.legend(loc='upper right')
+    loss_f.savefig(f"{conf['exp_dir']}/loss.png")
+
+    # lr
+    lr_f, ax = plt.subplots(figsize=(10, 10))
+
+    df = pd.read_csv(f"{conf['exp_dir']}/metrics.csv")
+    lr_epoch = df[df['lr-Adam'].notnull()]['lr-Adam']
+
+    epochs = np.arange(0,lr_epoch.shape[0])
+    ax.plot(epochs, lr_epoch)
+    ax.set_title('learning rate')
+    # plt.xscale('log')
+    # plt.yscale('log')
+    # plt.ylim(0, 0.013)
+    ax.set_ylabel('lr')
+    ax.set_xlabel('epoch')
+    ax.legend(loc='upper right')
+    lr_f.savefig(f"{conf['exp_dir']}/lr.png")
 
 
 if __name__ == '__main__':

@@ -22,7 +22,7 @@ exp_conf = dict(
     hist_len=48,
     pred_len=12,
 
-    max_epochs=10,
+    max_epochs=50,
 
     stack_types=["trend", "seasonality", "generic"],
     num_blocks=[4, 4, 4],
@@ -36,7 +36,7 @@ exp_conf = dict(
 
     val_metric="val_loss",
     test_metric="test_mae",
-    batch_size=256,
+    batch_size=64,
     batch_sampler='synchronized',
 
     log_interval=10,
