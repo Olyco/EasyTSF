@@ -80,7 +80,13 @@ def prepare_data(config):
         num_workers=config['num_workers'], 
         batch_sampler=config['batch_sampler'],
     )
-    print(next(iter(train_dataloader)))
+    x, y = next(iter(train_dataloader))
+    print(x)
+    for key, value in x.items():
+        print(f"\t{key} = {value.size()}")
+
+    x, y = next(iter(train_dataloader))
+    print(x)
 
     val_dataloader = val_data.to_dataloader(
         train=False, 
