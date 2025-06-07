@@ -15,7 +15,7 @@ from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint, Ea
 from lightning.pytorch.loggers import CSVLogger, WandbLogger
 from lightning.pytorch.utilities.model_summary import ModelSummary
 from ray.tune.integration.pytorch_lightning import TuneReportCheckpointCallback
-from pytorch_forecasting.data import NaNLabelEncoder
+from pytorch_forecasting.data import NaNLabelEncoder, GroupNormalizer
 from pytorch_forecasting import TimeSeriesDataSet, Baseline, NBeats, GroupNormalizer, MultiNormalizer, EncoderNormalizer
 from sklearn.preprocessing import MinMaxScaler
 from lightning.pytorch.tuner import Tuner
@@ -67,9 +67,10 @@ def prepare_data(config):
         max_prediction_length=config['pred_len'],
         time_varying_unknown_reals=["variable"],
 
-        # target_normalizer=,
-        # scalers=,
+        target_normalizer=GroupNormalizer(),
+        scalers=None,
     )
+    print(train_data.get_parameters())
     val_data = TimeSeriesDataSet.from_dataset(train_data, val_cut)
     test_data = TimeSeriesDataSet.from_dataset(train_data, test_cut)
 
@@ -80,7 +81,7 @@ def prepare_data(config):
         batch_sampler=config['batch_sampler'],
     )
     print(next(iter(train_dataloader)))
-    
+
     val_dataloader = val_data.to_dataloader(
         train=False, 
         batch_size=config['batch_size'], 
