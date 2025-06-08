@@ -173,7 +173,7 @@ def train_func(hyper_conf, conf):
             log_gradient_flow=conf['log_gradient_flow'],
             weight_decay=conf['weight_decay'],
             learning_rate=conf['learning_rate'],
-            reduce_on_plateau_patience=2,
+            reduce_on_plateau_patience=4,
             reduce_on_plateau_min_lr=conf['reduce_on_plateau_min_lr'],
             reduce_on_plateau_reduction=10.0,
             )
